@@ -1,0 +1,425 @@
+---
+title: "A2"
+author: "Austin"
+date: "2023-11-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Q1
+
+### Q1.1
+*Fit	a	logistic	regression	with	student as	the	X	variable	and	default as	the	response variable.	Interpret	the	coefficients	and	discuss	whether	the	X	variable	is	significant.*
+
+```{r}
+library(ggplot2)
+data<-ISLR::Default #load the data
+table(data$default, data$student) #see the general relationship between student and default
+```
+From the table we can see for non-students, default rate is 206/(6850+206)= 2.92%.
+For students, default rate is 127/(127+2817)= 4.31%.
+
+Then we try to fit a logistic regression using student as variable.
+```{r}
+fit1 <- glm(default~student, data, family=binomial(logit)) #fit logistic regression
+summary(fit1, results=TRUE)
+```
+From the summary, we know that:
+*$X=1$ if student = Yes; $X=0$ otherwise.\
+*$Logit(p)=-3.50413+0.40489X$\
+*P(default=Yes|student=X)=$\large \frac{e^{-3.50413+0.40489X}}{1+e^{-3.50413+0.40489X}}$\
+Also, noted the p-value is at 0.0004, the effect of student variable is significant.
+
+### Q1.2
+*For	the	above	logistic	regression,	one	can	actually	obtain	explicit	expression	of	the	maximum	likelihood	estimates	of	the	coefficients.	Please	do	the	following*
+
+### Q1.2i
+*Write	down	the	logistic	regression	model	by	coding	student using	one	dummy	variable:	0 for	students	and	1 for	non-students.*
+
+We say:
+$$
+Y=
+\begin{cases} 1 &if\; default\\\\0& if\; not\; default \end{cases}
+$$
+and
+$$
+X=
+\begin{cases} 1 &for\; non\;student\\\\0& for\; student \end{cases}
+$$
+The logistic regression can then be defined as:
+$log\left(\frac{p(x)}{1-p(x)}\right)=\beta_0+\beta_1X$
+where
+$p(x)$ is equivalent to $Pr(Y=1|X=x)$
+
+### Q1.2ii
+*Write	down	the	corresponding	likelihood	function.*
+
+The likelihood for the i-th data is:
+$p(X_i)=\frac{e^{\beta_0+\beta_1X_i}}{1+e^{\beta_0+\beta_1X_i}}$\
+When $X_i=1$,
+$Pr(Y=1|X_i=1)=\frac{e^{\beta_0+\beta_1}}{1+e^{\beta_0+\beta_1}}$\
+When $X_i=0$,
+$Pr(Y=1|X_i=0)=\frac{e^{\beta_0}}{1+e^{\beta_0}}$
+
+Therefore, the joint likelihood function can be summarized as:
+$\prod_{i=1}^n{p^{y_i}(1-p)^{1-y_i}}$
+
+### Q1.2iii
+*Obtain	expressions	for	the	coefficient	estimates,	and	compare	them	with	the	answers	in	Q1.1.*
+
+Using the likelihood function above, \
+$L( \beta _{0} ,\beta _{1}) =\prod _{1}^{n} p^{y_{i}}( 1-p)^{1-y_{i}}$\
+Take log of both sides,\
+$l(\beta_{0},\beta_{1})=\sum^n_1(y_{i}logp+(1-y_{i})log(1-p))$\
+We know that:
+$p=\frac{e^{\beta _{0} +\beta _{1} X}}{1+e^{\beta _{0} +\beta _{1} X}}$\
+Therefore, \
+$$
+ \begin{array}{l}
+l( \beta _{0} ,\beta _{1}) =\sum _{1}^{n}\left( y_{i} log\frac{e^{\beta _{0} +\beta _{1} X}}{1+e^{\beta _{0} +\beta _{1} X}} +( 1-y_{i}) log\left(\frac{1}{1+e^{\beta _{0} +\beta _{1} X}}\right)\right)\\
+l( \beta _{0} ,\beta _{1}) =\sum _{1}^{n}\left( y_{i}\left( loge^{\beta _{0} +\beta _{1} X} -log\left( 1+e^{\beta _{0} +\beta _{1} X}\right)\right) +( 1-y_{i})\left( -log\left( 1+e^{\beta _{0} +\beta _{1} X}\right)\right)\right)\\
+\\
+l( \beta _{0} ,\beta _{1}) =\sum _{1}^{n}\left( y_{i} loge^{\beta _{0} +\beta _{1} X} -log\left( 1+e^{\beta _{0} +\beta _{1} X}\right)\right)\\
+l( \beta _{0} ,\beta _{1}) =\sum _{1}^{n}\left( y_{i} \beta _{0} +\beta _{1} Xy_{i} -log\left( 1+e^{\beta _{0} +\beta _{1} X}\right)\right)
+\end{array}
+$$
+Now, consider the case of Q1.1 first for simplicity, we define:
+ 
+$$
+\begin{array}{l}
+n_{1} =number\ of\ defaults=\sum _{1}^{n} y_{i}\\
+n_{2} =number\ of\ students=\sum _{1}^{n} X_{i}{}\\
+n_{3} \ =\ number\ of\ default\ students\ =\ \sum _{1}^{n} X_{i} y_{i}
+\end{array}
+$$
+So the log-likelihood becomes:\
+$l( \beta _{0} ,\beta _{1}) =\ n_{1} \beta _{0} +n_{3} \beta _{1} -n_{2} log\left( 1+e^{\beta _{0} +\beta _{1}}\right) -( n-n_{2}) log\left( 1+e^{\beta _{0}}\right)$\
+
+Take derivatives with respect to $\beta_0$ and $\beta_1$:\
+$$
+\begin{array}{l}
+\frac{dl}{d\beta _{0}} =n_{1} -n_{2}\frac{e^{\beta _{0} +\beta _{1}}}{1+e^{\beta _{0} +\beta _{1}}} -( n-n_{2})\frac{e^{\beta _{0}}}{1+e^{\beta _{0}}}\\
+\frac{dl}{d\beta _{1}} =n_{3} -n_{2}\frac{e^{\beta _{0} +\beta _{1}}}{1+e^{\beta _{0} +\beta _{1}}}
+\end{array}
+$$
+Setting both equations to 0, for $\beta_1$:\
+$$
+\begin{array}{l}
+n_{3} +n_{3} e^{\beta _{0} +\beta _{1}} -n_{2} e^{\beta _{0} +\beta _{1}} =0\\
+e^{\beta _{1}} =\frac{-n_{3}}{n_{3} e^{\beta _{0}} -n_{2} e^{\beta _{0}}} =-e^{-\beta _{0}} \times \frac{n_{3}}{n_{3} -n_{2}}\\
+\beta _{1} =log\left(\frac{n_{3}}{n_{2} -n_{3}}\right) -\beta _{0}\\
+\end{array}
+$$
+Similarly, $\beta _{0} =-log\left(\frac{n-n_{2}}{n_{1} -n_{3}} -1\right)$\
+
+Recalling from Q1.1, \
+$$
+\begin{array}{l}
+n=10000\\
+n_1=333\\
+n_2=2944\\
+n_3=127
+\end{array}
+$$
+Using these figures and the formula for $\beta_0$ and $\beta_1$ above, we can get the result from Q1.1, i.e. 
+
+$$
+\begin{array}{l}
+\beta_0=-3.50413\\
+\beta_1=0.40489
+\end{array}
+$$
+Now, consider the context of Q1.2 where X=0 for student and X=1 for non-student.\
+Therefore we would have a new set of n and betas. We call them as $newn_2, newn_3, new\beta_0, new\beta_1$ ($n_1$, which is the total default, remains the same)
+
+We know that:  
+$$
+\begin{array}{l}
+new\ n_{2\ } =n-n_{2} =7056\\
+new\ n_{3} =n_{1} -n_{3} \ =\ 206
+\end{array}
+$$
+Putting these two new ns back into the formula we derived above:\
+$$
+\begin{array}{l}
+new\ \beta _{0} =-log\left(\frac{10000-7056}{333-206} -1\right) =-3.09924\\
+new\ \beta _{1} =log\left(\frac{206}{7056-206}\right) -log\left(\frac{10000-7056}{333-206} -1\right) =-0.40489
+\end{array}
+$$
+Which means:
+$$
+\begin{array}{l}
+new\beta _{0} =\beta _{0} +\beta _{1}\\
+new\beta _{1} =-\beta _{1}
+\end{array}
+$$
+This can also be derived by simply comparing the terms of likelihood for cases X=0 and X=1:\\
+$$
+ \begin{array}{l}
+P(Y=1|student)=\frac{e^{\beta _{0} +\beta _{1}}}{1+e^{\beta _{0} +\beta _{1}}} =\frac{e^{new\beta _{0}}}{1+e^{new\beta _{0}}}\\
+\\
+P(Y=1|non-student)=\frac{e^{\beta _{0}}}{1+e^{\beta _{0}}} =\frac{e^{new\beta _{0} +new\beta _{1}}}{1+e^{new\beta _{0} +new\beta _{1}}}
+\end{array}
+$$
+Comparing the coefficients:\
+$$
+\begin{array}{l}
+\beta _{0} +\beta _{1} =new\beta _{0}\\
+\beta _{0} =new\beta _{0} +new\beta _{1}
+\end{array}
+$$
+Which gives us the same result above.
+
+### Q1.3i
+*Consider	all	the	variables and	obtain	the	final	logistic	regression	model.*
+
+Try to use all variables to fit the logistic regression again:
+```{r}
+fit2 <- glm(default~., data, family=binomial(logit)) #fit logistic regression
+summary(fit2)
+```
+This summary tells us that income variable is not useful as the p-value is high.
+So we try to fit the model again without this variable:
+```{r}
+fit3 <- glm(default~student+balance, data, family=binomial(logit)) #fit logistic regression
+summary(fit3)
+```
+This summary tells us that the fitted model is:
+$log\left(\frac{p(x)}{1-p(x)}\right)=-1.075-0.7149X_1+0.005738X_2$
+where $X_1$ is 1 if student, and 0 otherwise; and $X_2$ is the balance.
+
+### Q1.3ii
+```{r}
+library(pROC)
+set.seed(42)
+roc(data$default,fit1$fitted.values, plot=TRUE) #get ROC and AUC for fit1
+```
+```{r}
+roc(data$default,fit3$fitted.values, plot=TRUE) #get ROC and AUC for fit3
+```
+It is obvious that fit3 has a much better ROC curve and higher AUC, which shows that it is a better model.
+
+One more anova test to show that these two fits are significantly different from each other.
+```{r}
+anova(fit1, fit3, test="Chisq")
+```
+### Q1.3iii
+```{r}
+data$p<-predict(fit3, data[,2:3],type="response")
+data$predict=ifelse(data$p>0.5,"Yes","No")
+conf_matrix<-table(data$predict,data$default)
+conf_matrix
+```
+Column labels: Predict
+Row labels: Actual
+
+TP: 105
+FP: 228
+TN: 9628
+FN: 39
+
+Sensitivity=TP/(TP+FN)=0.7291667
+Specificity=TN/(TN+FP)=0.9768669
+FPR=1-Specificity=0.0231331
+FNR=1-Sensitivity=0.2708333
+
+## Q2
+
+```{r}
+data2<-read.csv('lostsales.txt') #load the data
+sum(is.na(data2)) #check for missing values
+```
+```{r}
+head(data2) #observe the data
+```
+```{r}
+data2$Part.Type<-as.factor(data2$Part.Type) #change dtype to factor
+levels(data2$Part.Type)
+```
+
+```{r}
+data2$Status<-as.factor(data2$Status) #change dtype to factor
+levels(data2$Status)
+```
+
+```{r}
+fitq2<-glm(Status~., data2, family=binomial(logit)) #fit logistic regression
+summary(fitq2)
+```
+Noticed the p-value for Quote is high, meaning that the quoted price is actually insignificant to determining the win or lose result. Therefore we drop this variable and run the regression again:
+```{r}
+fitq2_2<-glm(Status~Time.to.Delivery+Part.Type, data2, family=binomial(logit)) #fit logistic regression
+summary(fitq2_2)
+```
+In this summary, we can tell the the likelihood $p$ of customers ordering is:
+$p=\frac{e^{0.723499-0.018344X_1-0.475768X_2}}{1+e^{0.723499-0.018344X_1-0.475768X_2}}$\
+where $X_1$ is the time to delivery and $X_2=1$ if the Part type is OE, and $X_2=0$ if the Part type is AM.\
+\
+Noticed the coefficients of $X_1$ and $X_2$ are both negative, this means the likelihood of winning would increase if\
+
+1. the time to delivery decreases, and/or\
+2. the Part type is not OE.
+
+Also, we noticed the quoted price is not a a key factor in terms of lost sales.
+
+## Q3
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(GGally)
+data3<-read.csv('winequality-bc.txt') #load the data
+sum(is.na(data3)) #check for missing values
+```
+
+```{r}
+head(data3)
+```
+See a summary of data
+```{r}
+summary(data3)
+```
+
+Change the "Quality" and "Color" to factor
+```{r}
+data3$Quality<-factor(data3$Quality, levels=c("Bad", "Just OK", "Good"))
+data3$color<-as.factor(data3$color)
+```
+Noted that the column "Quality" and "quality" are representing the same information with different factor levels, we decide to drop "quality" for simplicity.
+Also noted the last two columns are irrelevant, we would drop them as well.
+```{r}
+data3m<-subset(data3, select=-c(quality,Crossvalidation,Hold.Test))
+```
+
+Noticed that the notable difference between Q3 and Max for "residual.sugar", "chlorides","free.sulfur.dioxide", "total.sulfur.dioxide", "sulphates". We explore them one-by-one.
+
+```{r}
+boxplot(data3)
+```
+
+```{r}
+ggplot(data=data3m, aes(x=residual.sugar)) +
+     geom_histogram(fill="steelblue", color="black", bins = 40) +
+     ggtitle("residual.sugar")
+```
+```{r}
+data3m[data3m$residual.sugar >20,]
+```
+From observing the slice, we can remove row 3253, 3263 and 4381 as they are outliers.
+
+```{r}
+ggplot(data=data3m, aes(x=chlorides)) +
+     geom_histogram(fill="steelblue", color="black", bins = 40) +
+     ggtitle("chlorides")
+```
+```{r}
+data3m[data3m$chlorides >0.3,]
+```
+From observing the slice, we can see there are actually quite a number of observations between 0.3 and 0.5, but only 2 observations of over 0.5 at row 152 and 259. We can only drop rows 152 and 259 in this sense.
+
+```{r}
+ggplot(data=data3m, aes(x=free.sulfur.dioxide)) +
+     geom_histogram(fill="steelblue", color="black", bins = 40) +
+     ggtitle("free.sulfur.dioxide")
+```
+```{r}
+data3m[data3m$free.sulfur.dioxide >130,]
+```
+We can just drop the outlier, row 6345.
+
+```{r}
+ggplot(data=data3m, aes(x=total.sulfur.dioxide)) +
+     geom_histogram(fill="steelblue", color="black", bins = 40) +
+     ggtitle("total.sulfur.dioxide")
+```
+```{r}
+data3m[data3m$total.sulfur.dioxide >300,]
+```
+We can just drop row 6345(included above) as the notable outlier. 
+
+```{r}
+ggplot(data=data3m, aes(x=sulphates)) +
+     geom_histogram(fill="steelblue", color="black", bins = 40) +
+     ggtitle("sulphates")
+```
+```{r}
+data3m[data3m$sulphates >1.5,]
+```
+We can drop rows 87, 92, 93, 152(included above) to remove those outliers with sulphates>1.9.
+
+```{r}
+data3m<-data3m[-c(87,92,93,152, 259,6345,4381,3253,3263),] #clean up data
+```
+
+```{r}
+boxplot(data3m)
+```
+
+now we divide the data by around 90:10 to obtain a training set and testing set.
+```{r}
+train<-data3m[1:5840,]
+test<-data3m[5841:6488,]
+```
+
+
+### Q3.1
+*Multinomial	logistic	regression*
+
+```{r}
+library(nnet)
+fitq3_1<-multinom(Quality~., train, family=binomial(logit)) #fit logistic regression
+summary(fitq3_1)
+```
+Check the accuracy of model:
+```{r}
+predict3_1 <- predict(fitq3_1, newdata = test, "class")
+tab <- table(test$Quality, predict3_1)
+round((sum(diag(tab))/sum(tab))*100,2)# Calculating accuracy
+```
+
+```{r}
+library(car)
+Anova(fitq3_1)
+```
+From the result, we can consider not using citric.acid as variable:
+```{r}
+fitq3_1_2<-multinom(Quality~.-citric.acid, train, family=binomial(logit)) #fit logistic regression again
+summary(fitq3_1_2)
+```
+```{r}
+predict3_1_2 <- predict(fitq3_1_2, newdata = test, "class")
+tab2 <- table(test$Quality, predict3_1_2)
+round((sum(diag(tab2))/sum(tab2))*100,2)# Calculating accuracy
+```
+
+### Q3.2 Orindal Logistic Regression
+
+```{r}
+pacman::p_load(MASS)
+fit_q3_2 <- polr(Quality ~ ., data = train)
+summary(fit_q3_2)
+```
+```{r}
+Anova(fit_q3_2)
+```
+```{r}
+predict3_2_1 <- predict(fit_q3_2, newdata = test, "class")
+tab3 <- table(test$Quality, predict3_2_1)
+round((sum(diag(tab3))/sum(tab3))*100,2)# Calculating accuracy
+```
+From the Anova result above, we drop 3 predictors: citric.acid, chlorides, total.sulfur.dioxide
+```{r}
+fit_q3_2_2 <- polr(Quality ~ .-citric.acid -chlorides -total.sulfur.dioxide, data = train)
+summary(fit_q3_2_2)
+```
+```{r}
+Anova(fit_q3_2_2)
+```
+```{r}
+predict3_2_2<- predict(fit_q3_2_2, newdata = test, "class")
+tab4 <- table(test$Quality, predict3_2_2)
+round((sum(diag(tab4))/sum(tab4))*100,2) # Calculating accuracy
+```
